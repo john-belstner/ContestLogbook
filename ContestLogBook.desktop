@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=ContestDayLogBook
+Comment=Generic Contest Logbook Application
+Exec=contestlogbook
+Icon=contestlogbook
+Terminal=false
+Type=Application
+Categories=HamRadio;Utility;
+StartupNotify=true
