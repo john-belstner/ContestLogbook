@@ -287,10 +287,18 @@ def config_settings():
     app.wait_window(dlg.top)
     # If CAT was connected, reconnect with new settings
     if cat and cat_connected:
-        if cat.reload_config(config):
-            showInfo(f"Successfully reconnected {cat._com_port} at {cat._baudrate} baud.")
+        if config.getboolean('CAT', 'auto_con', fallback=False):
+            if cat.reload_config(config):
+                showInfo(f"Successfully reconnected {cat._com_port} at {cat._baudrate} baud.")
+            else:
+                showError(f"Failed to reconnect on {cat._com_port}.")
         else:
-            showError(f"Failed to reconnect on {cat._com_port}.")
+            cat.disconnect()
+            cat_connected = False
+            showInfo("CAT disconnected due to configuration change.")
+    # If CAT was not connected, check if auto connect is now enabled
+    elif config.getboolean('CAT', 'auto_con', fallback=False):
+        cat_connect()
     # Update grid_locator in the database if it was changed
     if 'MY_DETAILS' in config:
         ldb.update_config(config)
