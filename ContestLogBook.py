@@ -257,13 +257,25 @@ def cat_connect():
 
 # Update the exchange sent
 def update_exch_sent():
-    exch = config["MY_DETAILS"].get("exch_sent", "")
-    if '<qso>' in exch:
+    exch_sent = config["MY_DETAILS"].get("exch_sent", "")
+    if '<qso>' in exch_sent:
         qso_number = qsoNumberEntry.get().strip()
-        exch = exch.replace('<qso>', qso_number)
+        exch_sent = exch_sent.replace('<qso>', qso_number)
+    if '<rst>' in exch_sent:
+        rst_sent = rstSentEntry.get().strip()
+        exch_sent = exch_sent.replace('<rst>', rst_sent)
     exchSentEntry.delete(0, END)
-    exchSentEntry.insert(0, exch)
+    exchSentEntry.insert(0, exch_sent)
 
+# Update the exchange received
+def update_exch_rcvd():
+    exch_sent = config["MY_DETAILS"].get("exch_sent", "")
+    if '<rst>' in exch_sent:
+        exch_rcvd = exchRcvdEntry.get().strip()
+        exch_rcvd = rstRcvdEntry.get().strip() + " " + exch_rcvd
+        exchRcvdEntry.delete(0, END)
+        exchRcvdEntry.insert(0, exch_rcvd)
+ 
 # Menu functions
 def export_log():
     cbr_file = filedialog.asksaveasfilename(initialdir=".", title="Save .cbr File", defaultextension=".cbr", filetypes=(("Cabrillo files", "*.cbr"), ("all files", "*.*")))
@@ -411,6 +423,7 @@ def lookup_call(event=None):
             callsignEntry.focus_set()
             return "break"
 
+        update_exch_sent()    
         rstRcvdEntry.focus_set()
         return "break"
 
@@ -420,6 +433,7 @@ def lookup_call(event=None):
 
 # Button function (Log QSO)
 def log_qso(event=None):
+    update_exch_rcvd()
     new_qso = Qso(
         qso_id = qsoNumberEntry.get().strip(),
         freq=freqEntry.get().strip(),
@@ -536,15 +550,8 @@ deleteButton.bind("<Return>", lambda e: delete_qso_from_db())
 
 # Set the focus order when <Tab> is pressed
 callsignEntry.bind("<Tab>", lambda e: lookup_call(e))
-callsignEntry.focus_set()
-
-
-# Set the focus order when <Tab> is pressed
-callsignEntry.bind("<Tab>", lambda e: lookup_call(e))
 rstRcvdEntry.bind("<Tab>", lambda e: focus_next_widget(e, exchRcvdEntry))
-exchRcvdEntry.bind("<Tab>", lambda e: focus_next_widget(e, rstSentEntry))
-rstSentEntry.bind("<Tab>", lambda e: focus_next_widget(e, exchSentEntry))
-exchSentEntry.bind("<Tab>", lambda e: focus_next_widget(e, logButton))
+exchRcvdEntry.bind("<Tab>", lambda e: focus_next_widget(e, logButton))
 callsignEntry.focus_set()
 
 
