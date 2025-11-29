@@ -14,7 +14,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 
-appVersion = "0.1"
+appVersion = "0.2"
 app = Tk()
 app.title('Contest Log Book by W9EN - v' + appVersion)
 

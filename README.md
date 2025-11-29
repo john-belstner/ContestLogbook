@@ -53,7 +53,18 @@ contest_log.db         # SQLite QSO database
 ### 1️⃣ Prerequisites
 Ensure the following are installed:
 - Python **3.9+**
-- `pip install pyserial configparser pathlib datetime tkinter sqlite3`
+
+**Debian/Ubuntu:**
+```bash
+sudo apt install python3 python3-tk python3-serial
+```
+
+**Using pip (alternative for pyserial only):**
+```bash
+pip install pyserial
+```
+
+Note: `tkinter` should be installed via your system package manager, not pip. The `configparser`, `pathlib`, `datetime`, and `sqlite3` modules are part of Python's standard library and require no installation.
 
 ### 2️⃣ Clone the Repository
 ```bash
@@ -122,24 +133,30 @@ You’ll see the main GUI containing:
 
 ## 🧭 Typical Workflow
 
-1. **Connect Services**  
+1. **Configure Settings**  
+   - From the *Config* menu:  
+     - “Edit Settings” → Select appropriate settings for a particular contest.
+        - Contest Name, Category fields, Exchange
+        - CAT Interface Settings
+
+2. **Connect Services**  
    - From the *Connect* menu:  
      - “Connect CAT” → open serial link to your radio.
 
-2. **Lookup a Callsign**  
+3. **Lookup a Callsign**  
    - Enter a callsign and hit **Tab**.  
    - The program fills date, time .
 
-3. **Log a QSO**  
+4. **Log a QSO**  
    - Verify date/time (UTC) and band/mode fields.  
    - Click **Log QSO** or keep hitting **Tab**.  
    - The entry is stored in `contest_log.db`.
 
-4. **Review and Edit**  
+5. **Review and Edit**  
    - The “Recent Contacts” list shows the latest QSOs.  
    - Enter/Select a QSO number and choose “Edit” or “Delete”.
 
-5. **Export Cabrillo**  
+6. **Export Cabrillo**  
    - Use the *File* menu to export logs for upload.
 
 ---

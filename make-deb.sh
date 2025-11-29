@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP=fdlogbook
-VER=0.1
+VER=0.2
 REL=1
 PKGDIR=build/${APP}_${VER}-${REL}
 
@@ -36,13 +36,13 @@ chmod 0755 $PKGDIR/usr/bin/${APP}
 # Debian Control file
 cat > $PKGDIR/DEBIAN/control << 'EOF'
 Package: contestlogbook
-Version: 0.1-1
+Version: 0.2-1
 Section: utils
 Priority: optional
 Architecture: all
 Maintainer: John M. Belstner <john@w9en.com>
 Description: ContestLogBook - Lightweight logging application tailored contest operations (Python 3 + Tkinter + SQLite)
- Depends: python3 (>= 3.9), python3-tk, python3-requests, python3-cryptography, python3-serial, tqsl, desktop-file-utils, hicolor-icon-theme
+Depends: python3 (>= 3.9), python3-tk, python3-serial, desktop-file-utils, hicolor-icon-theme
 EOF
 
 
@@ -76,7 +76,7 @@ chmod 0755 $PKGDIR/DEBIAN/postrm
 
 # Documentation
 gzip -9c << 'EOF' > $PKGDIR/usr/share/doc/${APP}/changelog.Debian.gz
-contestlogbook (0.1-1) stable; urgency=low
+contestlogbook (0.2-1) stable; urgency=low
 
   * Initial release.
 
