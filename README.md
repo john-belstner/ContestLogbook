@@ -41,6 +41,7 @@ ContestLogBook.py      # Main application
 ConfigWindow.py        # Configuration GUI (reads/writes config.ini)
 LogDatabase.py         # SQLite database handler for QSO records
 LastQSOs.py            # Recent QSOs table display (Treeview)
+UdpSocket.py           # Multicast UDP interface for sharing QSO data
 Cat.py                 # CAT serial interface for radio control
 Qso.py                 # QSO record object (ADIF generation, validation)
 config.ini             # Configuration file (encrypted credentials)
