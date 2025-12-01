@@ -3,7 +3,7 @@ from Qso import Qso
 
 
 class LogDatabase:
-    columns = ["row_id", "Freq", "Band", "Mode", "Date", "Time", "My_Call", "RST_Sent", "Exch_Sent", "Callsign", "RST_Rcvd", "Exch_Rcvd", "Xmtr_Id"]
+    columns = ["row_id", "Freq", "Band", "Mode", "Date", "Time", "My_Call", "Exch_Sent", "Callsign", "Exch_Rcvd", "Xmtr_Id"]
 
     def __init__(self, config, appVersion="1.0"):
         self.db_file = "contest_log.db"
@@ -24,10 +24,8 @@ class LogDatabase:
             Date TEXT NOT NULL,
             Time TEXT NOT NULL,
             My_Call TEXT NOT NULL,
-            RST_Sent TEXT,
             Exch_Sent TEXT NOT NULL,
             Callsign TEXT NOT NULL,
-            RST_Rcvd TEXT,
             Exch_Rcvd TEXT NOT NULL,
             Xmtr_Id TEXT NOT NULL
         );
@@ -80,7 +78,7 @@ class LogDatabase:
         if count_digi is None:
             count_digi = 0
         # Get Last Hour Rate
-        count_hour_sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE Date GLOB '????????' AND Time GLOB '????' AND julianday( substr(Date,1,4) || '-' || substr(Date,5,2) || '-' || substr(Date,7,2) || ' ' || substr(Time,1,2) || ':' || substr(Time,3,2) || ':00') >= julianday('now','-1 hour');"
+        count_hour_sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE Date GLOB '????-??-??' AND Time GLOB '????' AND julianday( substr(Date,1,4) || '-' || substr(Date,6,2) || '-' || substr(Date,9,2) || ' ' || substr(Time,1,2) || ':' || substr(Time,3,2) || ':00') >= julianday('now', '-1 hours');"
         self.cursor.execute(count_hour_sql)
         count_hour = self.cursor.fetchone()[0]
         if count_hour is None:
@@ -89,19 +87,19 @@ class LogDatabase:
 
     def insert_qso(self, qso: Qso):
         insert_sql = f'''
-        INSERT INTO {self.table_name} (Freq, Band, Mode, Date, Time, My_Call, RST_Sent, Exch_Sent, Callsign, RST_Rcvd, Exch_Rcvd, Xmtr_Id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO {self.table_name} (Freq, Band, Mode, Date, Time, My_Call, Exch_Sent, Callsign, Exch_Rcvd, Xmtr_Id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         '''
-        self.cursor.execute(insert_sql, (qso.freq, qso.band, qso.mode, qso.date, qso.time, qso.my_call, qso.rst_sent, qso.exch_sent, qso.callsign, qso.rst_rcvd, qso.exch_rcvd, qso.xmtr_id))
+        self.cursor.execute(insert_sql, (qso.freq, qso.band, qso.mode, qso.date, qso.time, qso.my_call, qso.exch_sent, qso.callsign, qso.exch_rcvd, qso.xmtr_id))
         self.conn.commit()
 
     def update_qso(self, qso: Qso):
         update_sql = f'''
         UPDATE {self.table_name}
-        SET Freq = ?, Band = ?, Mode = ?, Date = ?, Time = ?, My_Call = ?, RST_Sent = ?, Exch_Sent = ?, Callsign = ?, RST_Rcvd = ?, Exch_Rcvd = ?, Xmtr_Id = ?
+        SET Freq = ?, Band = ?, Mode = ?, Date = ?, Time = ?, My_Call = ?, Exch_Sent = ?, Callsign = ?, Exch_Rcvd = ?, Xmtr_Id = ?
         WHERE rowid = ?;
         '''
-        self.cursor.execute(update_sql, (qso.freq, qso.band, qso.mode, qso.date, qso.time, qso.my_call, qso.rst_sent, qso.exch_sent, qso.callsign, qso.rst_rcvd, qso.exch_rcvd, qso.xmtr_id, qso.qso_id))
+        self.cursor.execute(update_sql, (qso.freq, qso.band, qso.mode, qso.date, qso.time, qso.my_call, qso.exch_sent, qso.callsign, qso.exch_rcvd, qso.xmtr_id, qso.qso_id))
         self.conn.commit()  
 
     def fetch_qso_by_id(self, qso_id):
@@ -124,20 +122,24 @@ class LogDatabase:
             with open(cbr_file, 'w') as f:
                 # Write ADIF header
                 f.write(f"START-OF-LOG: 3.0\n")
-                f.write(f"CONTEST: {self.config['MY_DETAILS'].get('contest_id','')}\n")
                 f.write(f"CALLSIGN: {self.config['MY_DETAILS'].get('my_call','')}\n")
-                f.write(f"LOCATION: {self.config['MY_DETAILS'].get('location','')}\n")
-                f.write(f"CATEGORY-OPERATOR: {self.config['MY_DETAILS'].get('category_operator','')}\n")
+                f.write(f"CONTEST: {self.config['MY_DETAILS'].get('contest_id','')}\n")
                 f.write(f"CATEGORY-ASSISTED: {self.config['MY_DETAILS'].get('category_assisted','')}\n")
                 f.write(f"CATEGORY-BAND: {self.config['MY_DETAILS'].get('category_band','')}\n")
-                f.write(f"CATEGORY-POWER: {self.config['MY_DETAILS'].get('category_power','')}\n")
                 f.write(f"CATEGORY-MODE: {self.config['MY_DETAILS'].get('category_mode','')}\n")
+                f.write(f"CATEGORY-OPERATOR: {self.config['MY_DETAILS'].get('category_operator','')}\n")
+                f.write(f"CATEGORY-POWER: {self.config['MY_DETAILS'].get('category_power','')}\n")
+                f.write(f"CATEGORY-STATION: {self.config['MY_DETAILS'].get('category_station','')}\n")
+                f.write(f"CATEGORY-TIME: {self.config['MY_DETAILS'].get('category_time','')}\n")
                 f.write(f"CATEGORY-TRANSMITTER: {self.config['MY_DETAILS'].get('category_transmitter','')}\n")
                 f.write(f"CATEGORY-OVERLAY: {self.config['MY_DETAILS'].get('category_overlay','')}\n")
-                f.write(f"GRID-LOCATOR: {self.config['MY_DETAILS'].get('grid_locator','')}\n")
+                f.write(f"CERTIFICATE: {self.config['MY_DETAILS'].get('certificate','')}\n")
                 f.write(f"CLAIMED-SCORE: {self.config['MY_DETAILS'].get('claimed_score','')}\n")
                 f.write(f"CLUB: {self.config['MY_DETAILS'].get('club','')}\n")
                 f.write(f"CREATED-BY: ContestLogBook v{self.appVersion}\n")
+                f.write(f"EMAIL: {self.config['MY_DETAILS'].get('email','')}\n")
+                f.write(f"GRID-LOCATOR: {self.config['MY_DETAILS'].get('grid_locator','')}\n")
+                f.write(f"LOCATION: {self.config['MY_DETAILS'].get('location','')}\n")
                 f.write(f"NAME: {self.config['MY_DETAILS'].get('name','')}\n")
                 f.write(f"ADDRESS: {self.config['MY_DETAILS'].get('address_street','')}\n")
                 f.write(f"ADDRESS-CITY: {self.config['MY_DETAILS'].get('address_city','')}\n")
@@ -157,10 +159,8 @@ class LogDatabase:
                         date=row[self.columns.index("Date")],
                         time=row[self.columns.index("Time")],
                         my_call=row[self.columns.index("My_Call")],
-                        rst_sent=row[self.columns.index("RST_Sent")],
                         exch_sent=row[self.columns.index("Exch_Sent")],
                         callsign=row[self.columns.index("Callsign")],
-                        rst_rcvd=row[self.columns.index("RST_Rcvd")],
                         exch_rcvd=row[self.columns.index("Exch_Rcvd")],
                         xmtr_id=row[self.columns.index("Xmtr_Id")]
                     )

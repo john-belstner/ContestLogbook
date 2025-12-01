@@ -4,6 +4,7 @@ from Qso import Qso
 from Cat import Cat
 from Cat import bands, modes
 from LastQSOs import LastQSOs
+from UdpSocket import UdpSocket
 from ConfigWindow import ConfigWindow
 from LogDatabase import LogDatabase as Db
 from pathlib import Path
@@ -14,7 +15,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 
-appVersion = "0.2"
+appVersion = "0.5"
 app = Tk()
 app.title('Contest Log Book by W9EN - v' + appVersion)
 
@@ -45,6 +46,9 @@ sections_var.set(sections[0]) # default value
 cat_connected = False
 cat = None
 
+udp_socket = None
+multi_station_enabled = False
+
 
 # Application exit function
 def app_exit():
@@ -53,6 +57,8 @@ def app_exit():
         ldb.close()
         if cat and cat_connected:
             cat.disconnect()
+        if udp_socket:
+            udp_socket.stop()
         app.destroy()
 
 app.protocol("WM_DELETE_WINDOW", app_exit)
@@ -120,6 +126,23 @@ else:
     ldb = Db()  # Use default values
 
 
+# Initialize Multi-Station UDP if enabled
+def enable_disable_multi_station():
+    global udp_socket, multi_station_enabled
+    multi_station_enabled = config.getboolean('MULTI_TX', 'enabled', fallback=False)
+    if multi_station_enabled:
+        multicast_group = config['MULTI_TX'].get('multicast_group', fallback='239.2.3.1')
+        multicast_port = config['MULTI_TX'].getint('multicast_port', fallback=6969)
+        interface_ip = config['MULTI_TX'].get('interface_ip', fallback=None)
+        if udp_socket is None:
+            udp_socket = UdpSocket(multicast_group, multicast_port, log_qso_from_udp, interface_ip)
+            udp_socket.start()
+    else:
+        if udp_socket:
+            udp_socket.stop()
+            udp_socket = None
+
+
 # Root view
 previewFrame = LabelFrame(app, text="Recent Contacts", padx=5, pady=5)
 previewFrame.grid(row=0, column=0, padx=5, pady=5)  # Set the frame position
@@ -134,7 +157,6 @@ statsFrame.grid_columnconfigure(3, minsize=minColumnWidth)
 statsFrame.grid_columnconfigure(4, minsize=minColumnWidth)
 statsFrame.grid_columnconfigure(5, minsize=minColumnWidth)
 statsFrame.grid_columnconfigure(6, minsize=minColumnWidth)
-statsFrame.grid_columnconfigure(7, minsize=minColumnWidth)
 
 qsoFrame = LabelFrame(app, text="QSO Entry", padx=5, pady=5)
 qsoFrame.grid(row=2, column=0, padx=5, pady=5)  # Set the frame position
@@ -146,7 +168,6 @@ qsoFrame.grid_columnconfigure(3, minsize=minColumnWidth)
 qsoFrame.grid_columnconfigure(4, minsize=minColumnWidth)
 qsoFrame.grid_columnconfigure(5, minsize=minColumnWidth)
 qsoFrame.grid_columnconfigure(6, minsize=minColumnWidth)
-qsoFrame.grid_columnconfigure(7, minsize=minColumnWidth)
 
 # Statistics Frame
 count_all, count_cw, count_phone, count_digi, count_hour = ldb.get_current_stats()
@@ -187,32 +208,27 @@ callsignLabel.grid(row=0, column=1)  # Put the label into the window
 callsignEntry = Entry(qsoFrame, width=10, borderwidth=2)  # Create an input box
 callsignEntry.grid(row=1, column=1)  # Set the input box position
 
-rstRcvdLabel = Label(qsoFrame, text="RST Rcvd")  # Create a label widget
-rstRcvdLabel.grid(row=0, column=2)  # Put the label into the window
-rstRcvdEntry = Entry(qsoFrame, width=10, borderwidth=2)  # Create an input box
-rstRcvdEntry.grid(row=1, column=2)  # Set the input box position
-
 exchRcvdLabel = Label(qsoFrame, text="Exchange Rcvd")  # Create a label widget
-exchRcvdLabel.grid(row=0, column=3, columnspan=2)  # Put the label into the window
+exchRcvdLabel.grid(row=0, column=2, columnspan=2)  # Put the label into the window
 exchRcvdEntry = Entry(qsoFrame, width=24, borderwidth=2)  # Create an input box
-exchRcvdEntry.grid(row=1, column=3,columnspan=2)  # Set the input box position
+exchRcvdEntry.grid(row=1, column=2,columnspan=2)  # Set the input box position
 
 freqLabel = Label(qsoFrame, text="Freq MHz")  # Create a label widget
-freqLabel.grid(row=0, column=5)  # Put the label into the window
+freqLabel.grid(row=0, column=4)  # Put the label into the window
 freqEntry = Entry(qsoFrame, width=10, borderwidth=2)  # Create an input box
-freqEntry.grid(row=1, column=5)  # Set the input box position
+freqEntry.grid(row=1, column=4)  # Set the input box position
 
 bandLabel = Label(qsoFrame, text="Band")  # Create a label widget
-bandLabel.grid(row=0, column=6)  # Put the label into the window
+bandLabel.grid(row=0, column=5)  # Put the label into the window
 bandMenu = ttk.Combobox(qsoFrame, textvariable=band_var, values=bands, state="normal")
-bandMenu.grid(row=1, column=6, padx=5, pady=5)
+bandMenu.grid(row=1, column=5, padx=5, pady=5)
 bandMenu.config(width=9)
 attach_autocomplete_to_combobox(bandMenu, bands)
 
 modeLabel = Label(qsoFrame, text="Mode")  # Create a label widget
-modeLabel.grid(row=0, column=7)  # Put the label into the window
+modeLabel.grid(row=0, column=6)  # Put the label into the window
 modeMenu = ttk.Combobox(qsoFrame, textvariable=mode_var, values=modes, state="normal")
-modeMenu.grid(row=1, column=7, padx=5, pady=5)
+modeMenu.grid(row=1, column=6, padx=5, pady=5)
 modeMenu.config(width=9)
 attach_autocomplete_to_combobox(modeMenu, modes)
 
@@ -226,15 +242,10 @@ timeLabel.grid(row=2, column=1)  # Put the label into the window
 timeEntry = Entry(qsoFrame, width=10, borderwidth=2)  # Create an input box
 timeEntry.grid(row=3, column=1)  # Set the input box position
 
-rstSentLabel = Label(qsoFrame, text="RST Sent")  # Create a label widget
-rstSentLabel.grid(row=2, column=2)  # Put the label into the window
-rstSentEntry = Entry(qsoFrame, width=10, borderwidth=2)  # Create an input box
-rstSentEntry.grid(row=3, column=2)  # Set the input box position
-
 exchSentLabel = Label(qsoFrame, text="Exchange Sent")  # Create a label widget
-exchSentLabel.grid(row=2, column=3, columnspan=2)  # Put the label into the window
+exchSentLabel.grid(row=2, column=2, columnspan=2)  # Put the label into the window
 exchSentEntry = Entry(qsoFrame, width=24, borderwidth=2)  # Create an input box
-exchSentEntry.grid(row=3, column=3,columnspan=2)  # Set the input box position
+exchSentEntry.grid(row=3, column=2,columnspan=2)  # Set the input box position
 
 
 # CAT Connect
@@ -261,20 +272,8 @@ def update_exch_sent():
     if '<qso>' in exch_sent:
         qso_number = qsoNumberEntry.get().strip()
         exch_sent = exch_sent.replace('<qso>', qso_number)
-    if '<rst>' in exch_sent:
-        rst_sent = rstSentEntry.get().strip()
-        exch_sent = exch_sent.replace('<rst>', rst_sent)
     exchSentEntry.delete(0, END)
     exchSentEntry.insert(0, exch_sent)
-
-# Update the exchange received
-def update_exch_rcvd():
-    exch_sent = config["MY_DETAILS"].get("exch_sent", "")
-    if '<rst>' in exch_sent:
-        exch_rcvd = exchRcvdEntry.get().strip()
-        exch_rcvd = rstRcvdEntry.get().strip() + " " + exch_rcvd
-        exchRcvdEntry.delete(0, END)
-        exchRcvdEntry.insert(0, exch_rcvd)
  
 # Menu functions
 def export_log():
@@ -317,6 +316,8 @@ def config_settings():
         update_exch_sent()
     else:
         showWarning("Config file is missing [MY_DETAILS]. Please update the config.ini file.")
+    # Enable or disable multi-station UDP
+    enable_disable_multi_station()
 
 
 # Create the File menu
@@ -355,7 +356,6 @@ def clear_entries():
     display_qso_number(ldb.get_last_rowid() + 1)
     last_qsos.refresh()
     callsignEntry.delete(0, END)
-    rstRcvdEntry.delete(0, END)
     exchRcvdEntry.delete(0, END)
     # Keep previous freq, band and mode selections
     #freqEntry.delete(0, END)
@@ -364,6 +364,7 @@ def clear_entries():
     #mode_var.set(modes[0])
     dateEntry.delete(0, END)
     timeEntry.delete(0, END)
+    update_exch_sent()    
     callsignEntry.focus_set()
 
 
@@ -423,8 +424,7 @@ def lookup_call(event=None):
             callsignEntry.focus_set()
             return "break"
 
-        update_exch_sent()    
-        rstRcvdEntry.focus_set()
+        exchRcvdEntry.focus_set()
         return "break"
 
     except Exception as e:
@@ -433,7 +433,6 @@ def lookup_call(event=None):
 
 # Button function (Log QSO)
 def log_qso(event=None):
-    update_exch_rcvd()
     new_qso = Qso(
         qso_id = qsoNumberEntry.get().strip(),
         freq=freqEntry.get().strip(),
@@ -442,10 +441,8 @@ def log_qso(event=None):
         date = dateEntry.get().strip(),
         time = timeEntry.get().strip(),
         my_call = config['MY_DETAILS']['my_call'].upper() if 'MY_DETAILS' in config and 'my_call' in config['MY_DETAILS'] else '',
-        rst_sent = rstSentEntry.get().strip(),
         exch_sent = exchSentEntry.get().strip().upper(),
         callsign = callsignEntry.get().strip().upper(),
-        rst_rcvd = rstRcvdEntry.get().strip(),
         exch_rcvd = exchRcvdEntry.get().strip().upper(),
         xmtr_id = config['MY_DETAILS']['xmtr_id'] if 'MY_DETAILS' in config and 'xmtr_id' in config['MY_DETAILS'] else ''
     )
@@ -460,6 +457,11 @@ def log_qso(event=None):
         else:
             ldb.update_qso(new_qso)
             #showInfo(f"QSO ID {new_qso.qso_id} updated successfully.")
+
+        # Send QSO to other stations if multi-station is enabled
+        if multi_station_enabled and udp_socket:
+            udp_socket.send(new_qso.to_string())
+
     except Exception as e:
         showError(f"An error occurred while logging the QSO: {str(e)}")
 
@@ -467,6 +469,29 @@ def log_qso(event=None):
     update_statistics()
     return "break"  # Prevent default behavior
     
+
+# Function to log QSO received via UDP
+def log_qso_from_udp(cbr_text, addr, ts):
+    """
+    Handler called from UDP thread. Schedules database operations
+    to run in the main thread to avoid SQLite threading issues.
+    """
+    def _do_insert():
+        try:
+            new_qso = Qso.from_string(cbr_text)
+            if new_qso.is_valid():
+                ldb.insert_qso(new_qso)
+                display_qso_number(ldb.get_last_rowid() + 1)
+                last_qsos.refresh()
+                update_statistics()
+            else:
+                print(f"Received invalid QSO data from {addr}, ignoring.")
+        except Exception as e:
+            print(f"An error occurred while logging the QSO from {addr}: {str(e)}")
+
+    # Schedule the database operation to run in the main thread
+    app.after(0, _do_insert)
+
 
 def next_qso_in_db():
     display_qso_number(ldb.get_last_rowid() + 1)
@@ -484,8 +509,6 @@ def load_qso_from_db():
             return
         callsignEntry.delete(0, END)
         callsignEntry.insert(0, qso[Db.columns.index("Callsign")])
-        rstRcvdEntry.delete(0, END)
-        rstRcvdEntry.insert(0, qso[Db.columns.index("RST_Rcvd")])
         exchRcvdEntry.delete(0, END)
         exchRcvdEntry.insert(0, qso[Db.columns.index("Exch_Rcvd")])
         freqEntry.delete(0, END)
@@ -496,12 +519,11 @@ def load_qso_from_db():
         dateEntry.insert(0, qso[Db.columns.index("Date")])
         timeEntry.delete(0, END)
         timeEntry.insert(0, qso[Db.columns.index("Time")])
-        rstSentEntry.delete(0, END)
-        rstSentEntry.insert(0, qso[Db.columns.index("RST_Sent")])
         exchSentEntry.delete(0, END)
         exchSentEntry.insert(0, qso[Db.columns.index("Exch_Sent")])
     except Exception as e:
         showError(f"An error occurred while loading QSO: {str(e)}")
+
 
 def delete_qso_from_db():
     rowid = qsoNumberEntry.get().strip()
@@ -521,6 +543,7 @@ def delete_qso_from_db():
     except Exception as e:
         showError(f"An error occurred while deleting QSO: {str(e)}")
 
+
 # Buttons
 logButton = Button(qsoFrame, text="Log QSO", command=log_qso)
 logButton.grid(row=4, column=0, padx=5, pady=5)
@@ -533,24 +556,23 @@ clearButton.config(width=8)
 clearButton.bind("<Return>", lambda e: clear_entries())
 
 nextButton = Button(qsoFrame, text="Next", command=next_qso_in_db)
-nextButton.grid(row=4, column=5, padx=5, pady=5)
+nextButton.grid(row=4, column=4, padx=5, pady=5)
 nextButton.config(width=8)
 nextButton.bind("<Return>", lambda e: next_qso_in_db())
 
 loadButton = Button(qsoFrame, text="Edit", command=load_qso_from_db)
-loadButton.grid(row=4, column=6, padx=5, pady=5)
+loadButton.grid(row=4, column=5, padx=5, pady=5)
 loadButton.config(width=8)
 loadButton.bind("<Return>", lambda e: load_qso_from_db())
 
 deleteButton = Button(qsoFrame, text="Delete", command=delete_qso_from_db)
-deleteButton.grid(row=4, column=7, padx=5, pady=5)
+deleteButton.grid(row=4, column=6, padx=5, pady=5)
 deleteButton.config(width=8)
 deleteButton.bind("<Return>", lambda e: delete_qso_from_db())
 
 
 # Set the focus order when <Tab> is pressed
 callsignEntry.bind("<Tab>", lambda e: lookup_call(e))
-rstRcvdEntry.bind("<Tab>", lambda e: focus_next_widget(e, exchRcvdEntry))
 exchRcvdEntry.bind("<Tab>", lambda e: focus_next_widget(e, logButton))
 callsignEntry.focus_set()
 
@@ -569,6 +591,9 @@ app.update()
 # Check auto connect and auto upload settings
 if config.getboolean('CAT', 'auto_con', fallback=False):
     cat_connect()
+
+# Enable or disable multi-station UDP
+enable_disable_multi_station()
 
 # Start periodic CAT updates
 #app.after(POLL_INTERVAL_MS, update_radio_settings)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP=fdlogbook
-VER=0.2
+VER=0.5
 REL=1
 PKGDIR=build/${APP}_${VER}-${REL}
 
@@ -20,6 +20,7 @@ cp Cat.py \
    ContestLogBook.py \
    LastQSOs.py \
    LogDatabase.py \
+   UdpSocket.py \
    Qso.py \
    $PKGDIR/usr/share/${APP}/
 
@@ -36,7 +37,7 @@ chmod 0755 $PKGDIR/usr/bin/${APP}
 # Debian Control file
 cat > $PKGDIR/DEBIAN/control << 'EOF'
 Package: contestlogbook
-Version: 0.2-1
+Version: 0.5-1
 Section: utils
 Priority: optional
 Architecture: all
@@ -76,7 +77,7 @@ chmod 0755 $PKGDIR/DEBIAN/postrm
 
 # Documentation
 gzip -9c << 'EOF' > $PKGDIR/usr/share/doc/${APP}/changelog.Debian.gz
-contestlogbook (0.2-1) stable; urgency=low
+contestlogbook (0.5-1) stable; urgency=low
 
   * Initial release.
 

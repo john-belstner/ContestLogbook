@@ -6,6 +6,7 @@ It manages station configuration, logs QSOs locally, keeps track of critical sta
 ---
 
 ![Contest LogBook Image](https://raw.githubusercontent.com/john-belstner/ContestLogBook/main/contestlogbook_image.png)
+![Settings Image](https://raw.githubusercontent.com/john-belstner/ContestLogBook/main/settings.png)
 
 ---
 
@@ -149,7 +150,7 @@ You’ll see the main GUI containing:
 
 4. **Log a QSO**  
    - Verify date/time (UTC) and band/mode fields.  
-   - Click **Log QSO** or keep hitting **Tab**.  
+   - Click **Log QSO** or hit **Enter** when **Log QSO** button is selected.  
    - The entry is stored in `contest_log.db`.
 
 5. **Review and Edit**  

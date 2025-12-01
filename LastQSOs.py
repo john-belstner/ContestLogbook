@@ -6,7 +6,7 @@ from tkinter import ttk
 
 class LastQSOs(ttk.Frame):
 
-    COLUMNS = ("rowid", "Callsign", "RST_Rcvd", "Exch_Rcvd", "Band", "Mode", "Date", "Time")
+    COLUMNS = ("rowid", "Callsign", "Exch_Rcvd", "Band", "Mode", "Date", "Time")
 
     def __init__(self, master, conn, on_pick=None):
         super().__init__(master, padding=8)
@@ -51,7 +51,6 @@ class LastQSOs(ttk.Frame):
         headings = {
             "rowid": "QSO",
             "Callsign": "Callsign",
-            "RST_Rcvd": "RST",
             "Exch_Rcvd": "Exchange",
             "Band": "Band",
             "Mode": "Mode",
@@ -61,8 +60,7 @@ class LastQSOs(ttk.Frame):
         widths = {
             "rowid": self.colw(9),
             "Callsign": self.colw(10),
-            "RST_Rcvd": self.colw(9),
-            "Exch_Rcvd": self.colw(21),
+            "Exch_Rcvd": self.colw(19),
             "Band": self.colw(9),
             "Mode": self.colw(9),
             "Date": self.colw(10),
@@ -79,7 +77,7 @@ class LastQSOs(ttk.Frame):
     def fetch_last_qsos(self, limit=10):
         # If datetime_utc is ISO-8601 text, simple ORDER BY works correctly.
         sql = """
-            SELECT rowid, Callsign, RST_Rcvd, Exch_Rcvd, Band, Mode, Date, Time
+            SELECT rowid, Callsign, Exch_Rcvd, Band, Mode, Date, Time
             FROM logbook
             ORDER BY Date DESC, Time DESC
             LIMIT ?
@@ -89,7 +87,7 @@ class LastQSOs(ttk.Frame):
     def fetch_qsos_by_call(self, call, limit=10):
         # If datetime_utc is ISO-8601 text, simple ORDER BY works correctly.
         sql = """
-            SELECT rowid, Callsign, RST_Rcvd, Exch_Rcvd, Band, Mode, Date, Time
+            SELECT rowid, Callsign, Exch_Rcvd, Band, Mode, Date, Time
             FROM logbook
             WHERE Callsign=?
             ORDER BY Date DESC, Time DESC

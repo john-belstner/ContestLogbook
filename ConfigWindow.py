@@ -129,6 +129,12 @@ class ConfigWindow:
         self.config['CAT']['band_cmd'] = self.bandCmdEntry.get().strip()
         self.config['CAT']['mode_cmd'] = self.modeCmdEntry.get().strip()
         self.config['CAT']['auto_con'] = str(self.autoConCatVar.get())
+
+        self.config['MULTI_TX']['multicast_group'] = self.groupEntry.get().strip()
+        self.config['MULTI_TX']['multicast_port'] = self.portEntry.get().strip()
+        self.config['MULTI_TX']['interface_ip'] = self.interfaceEntry.get().strip()
+        self.config['MULTI_TX']['enabled'] = str(self.enabledVar.get())
+
         with open('config.ini', 'w') as configfile:
             self.config.write(configfile)
         messagebox.showinfo("Settings Saved", "Configuration settings have been saved.", parent=self.top)
@@ -137,7 +143,7 @@ class ConfigWindow:
 
     def _build_ui(self):
         self.detailsFrame = LabelFrame(self.top, text="My Details", padx=5, pady=5)
-        self.detailsFrame.grid(row=0, column=0, padx=5, pady=5)
+        self.detailsFrame.grid(row=0, column=0, rowspan=2, padx=5, pady=5)
 
         self.myCallLabel = Label(self.detailsFrame, text="CALLSIGN:")
         self.myCallLabel.grid(row=0, column=0, sticky=W)
@@ -370,8 +376,40 @@ class ConfigWindow:
         )
         self.autoConCatCheck.grid(row=5, column=0, columnspan=2, sticky="w", pady=(5, 0))
 
+        self.udpFrame = LabelFrame(self.top, text="Multi-Station Network Settings", padx=5, pady=5)
+        self.udpFrame.grid(row=1, column=1, padx=5, pady=5)  # Set the frame position
+
+        self.groupLabel = Label(self.udpFrame, text="Multicast Address:")
+        self.groupLabel.grid(row=0, column=0, sticky=W)
+        self.groupEntry = Entry(self.udpFrame, width=20)
+        self.groupEntry.grid(row=0, column=1, padx=5, pady=2)
+        self.groupEntry.insert(0, self.config.get('MULTI_TX', 'multicast_group', fallback="239.2.3.1"))
+
+        self.portLabel = Label(self.udpFrame, text="Port:")
+        self.portLabel.grid(row=1, column=0, sticky=W)
+        self.portEntry = Entry(self.udpFrame, width=20)
+        self.portEntry.grid(row=1, column=1, padx=5, pady=2)
+        self.portEntry.insert(0, self.config.get('MULTI_TX', 'multicast_port', fallback="6969"))
+
+        self.interfaceLabel = Label(self.udpFrame, text="Interface IP:")
+        self.interfaceLabel.grid(row=2, column=0, sticky=W)
+        self.interfaceEntry = Entry(self.udpFrame, width=20)
+        self.interfaceEntry.grid(row=2, column=1, padx=5, pady=2)
+        self.interfaceEntry.insert(0, self.config.get('MULTI_TX', 'interface_ip', fallback="192.168.0.32"))
+
+        enabled_cat = self.config.getboolean('MULTI_TX', 'enabled', fallback=False)
+        self.enabledVar = BooleanVar(value=enabled_cat)
+        self.enabledCheck = Checkbutton(
+            self.udpFrame,
+            text="Enable Multi-Station Network",
+            variable=self.enabledVar,
+            onvalue=True,
+            offvalue=False
+        )
+        self.enabledCheck.grid(row=3, column=0, columnspan=2, sticky="w", pady=(5, 0))
+
         self.saveButton = Button(self.top, text="Save", command=self.save_config)
-        self.saveButton.grid(row=1, column=0, columnspan=2, pady=10) # Centered below all frames
+        self.saveButton.grid(row=2, column=0, columnspan=2, pady=10) # Centered below all frames
 
         self.top.protocol("WM_DELETE_WINDOW", self._config_exit)
 

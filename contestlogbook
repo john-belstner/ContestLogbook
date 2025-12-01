@@ -1,0 +1,3 @@
+#!/bin/bash
+cd ~/.local/share/ContestLogBook
+python3 ContestLogBook.py
