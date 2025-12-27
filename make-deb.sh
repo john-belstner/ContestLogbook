@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APP=fdlogbook
+APP=contestlogbook
 VER=0.5
 REL=1
 PKGDIR=build/${APP}_${VER}-${REL}

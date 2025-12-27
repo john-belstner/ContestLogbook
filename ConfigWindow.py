@@ -5,9 +5,9 @@ from tkinter import messagebox
 import configparser
 
 
-contests = ["ARRL-10", "ARRL-10-GHZ", "ARRL-160", "ARRL-DIGI", "ARRL-DX-CW", "ARRL-DX-SSB", "ARRL-EME", "ARRL-FD", "ARRL-SS-CW", "ARRL-SS-SSB",
+contests = ["ARRL-10", "ARRL-10-GHZ", "ARRL-160", "ARRL-DIGI", "ARRL-DX-CW", "ARRL-DX-SSB", "ARRL-EME", "ARRL-FD", "ARRL-SKN", "ARRL-SS-CW", "ARRL-SS-SSB",
             "BARTG-RTTY", "CQ-160-CW", "CQ-160-SSB", "CQ-WPX-CW", "CQ-WPX-RTTY", "CQ-WPX-SSB", "CQ-VHF-SSBCW", "CQ-VHF-DIGI", "CQ-WW-CW", "CQ-WW-RTTY", "CQ-WW-SSB",
-            "IARU-HF", "NAQP-CW", "NAQP-SSB", "NAQP-RTTY", "RDXC", "RSGB-IOTA", "SPDXC", "SPDXC-RTTY", "TARA-RTTY", "WAG", "WW-DIGI"]
+            "CWOPS-CWO", "CWOPS-CWT", "IARU-HF", "NAQP-CW", "NAQP-SSB", "NAQP-RTTY", "RDXC", "RSGB-IOTA", "SPDXC", "SPDXC-RTTY", "TARA-RTTY", "WAG", "WW-DIGI"]
 category_assisteds = ["ASSISTED", "NON-ASSISTED"]
 category_bands = ["ALL", "160M", "80M", "40M", "20M", "15M", "10M", "6M", "2M", "222", "432", "902", "1.2G", "2.3G", "3.4G", "5.7G", "10G", "24G", "47G", "75G", "122G", "134G", "241G",
                   "Light", "VHF-3-BAND", "VHF-FM-ONLY"]
