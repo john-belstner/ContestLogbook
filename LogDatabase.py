@@ -123,7 +123,7 @@ class LogDatabase:
                 # Write ADIF header
                 f.write(f"START-OF-LOG: 3.0\n")
                 f.write(f"CALLSIGN: {self.config['MY_DETAILS'].get('my_call','')}\n")
-                f.write(f"CONTEST: {self.config['MY_DETAILS'].get('contest_id','')}\n")
+                f.write(f"CONTEST: {self.config['MY_DETAILS'].get('contest','')}\n")
                 f.write(f"CATEGORY-ASSISTED: {self.config['MY_DETAILS'].get('category_assisted','')}\n")
                 f.write(f"CATEGORY-BAND: {self.config['MY_DETAILS'].get('category_band','')}\n")
                 f.write(f"CATEGORY-MODE: {self.config['MY_DETAILS'].get('category_mode','')}\n")
