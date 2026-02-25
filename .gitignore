@@ -1,5 +1,9 @@
 # IDE
 *.code-workspace
+CLAUDE.md
+
+# Build files
+build/
 
 # Python cache
 __pycache__
@@ -10,6 +14,7 @@ __pycache__
 
 # SQlite3 files
 *.db
+*.csv
 
 # Jupyter Notebooks
 *.ipynb

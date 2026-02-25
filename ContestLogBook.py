@@ -7,8 +7,11 @@ from LastQSOs import LastQSOs
 from UdpSocket import UdpSocket
 from ConfigWindow import ConfigWindow
 from LogDatabase import LogDatabase as Db
+from CwopsRoster import CwopsRoster
 from pathlib import Path
 from datetime import datetime, timezone
+import os
+import sys
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -124,6 +127,11 @@ if 'MY_DETAILS' in config:
 else:
     showWarning("Config file is missing MY_DETAILS. Please update the config.ini file.")
     ldb = Db()  # Use default values
+
+# Initialize CWops roster for CWT contests (only if contest is CWOPS-CWT)
+cwops_roster = None
+if config.get('MY_DETAILS', 'contest', fallback='').upper() == 'CWOPS-CWT':
+    cwops_roster = CwopsRoster()
 
 
 # Initialize Multi-Station UDP if enabled
@@ -292,8 +300,31 @@ def export_log():
         showError(f"Failed to export log: {reason}")
 
 
+def new_log():
+    confirm = messagebox.askyesno("New Log",
+        "This will save the current log and start a new one.\nAre you sure?", parent=app)
+    if not confirm:
+        return
+    # Close the database connection
+    ldb.close()
+    # Disconnect CAT if connected
+    if cat and cat_connected:
+        cat.disconnect()
+    # Stop UDP if running
+    if udp_socket:
+        udp_socket.stop()
+    # Rename the current db file with a timestamp
+    db_path = Path(ldb.db_file)
+    if db_path.exists():
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_name = db_path.with_name(f"{db_path.stem}_{timestamp}{db_path.suffix}")
+        db_path.rename(backup_name)
+    # Restart the application
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
 def config_settings():
-    global qrz_logged_in, qrz, cat_connected, cat
+    global qrz_logged_in, qrz, cat_connected, cat, cwops_roster
     dlg = ConfigWindow(app, config)
     app.wait_window(dlg.top)
     # If CAT was connected, reconnect with new settings
@@ -318,11 +349,16 @@ def config_settings():
         showWarning("Config file is missing [MY_DETAILS]. Please update the config.ini file.")
     # Enable or disable multi-station UDP
     enable_disable_multi_station()
+    # Load CWops roster if contest changed to CWOPS-CWT
+    if config.get('MY_DETAILS', 'contest', fallback='').upper() == 'CWOPS-CWT':
+        if cwops_roster is None:
+            cwops_roster = CwopsRoster()
 
 
 # Create the File menu
 menubar = Menu(app)
 file_menu = Menu(menubar, tearoff=0)
+file_menu.add_command(label="New Log", command=new_log)
 file_menu.add_command(label="Export Cabrillo", command=export_log)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=app_exit)
@@ -423,6 +459,14 @@ def lookup_call(event=None):
             showWarning(f"Duplicate QSO for {callsignEntry_value}")
             callsignEntry.focus_set()
             return "break"
+
+        # Pre-fill Exchange Rcvd for CWOPS-CWT contest
+        contest = config.get('MY_DETAILS', 'contest', fallback='').upper()
+        if contest == 'CWOPS-CWT' and cwops_roster:
+            exchange = cwops_roster.lookup(callsignEntry_value)
+            if exchange:
+                exchRcvdEntry.delete(0, END)
+                exchRcvdEntry.insert(0, exchange)
 
         exchRcvdEntry.focus_set()
         return "break"
