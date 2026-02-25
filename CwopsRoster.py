@@ -15,12 +15,12 @@ class CwopsRoster:
 
         Args:
             csv_path: Path to the CWops roster CSV file. If None, looks for
-                      'Shareable CWops data - Roster.csv' in the current directory.
+                      'Shareable CWops data - Roster.csv' in /tmp.
         """
         self._roster = {}  # callsign -> (name, number)
 
         if csv_path is None:
-            csv_path = Path(__file__).parent / 'Shareable CWops data - Roster.csv'
+            csv_path = Path('/tmp') / 'Shareable CWops data - Roster.csv'
         else:
             csv_path = Path(csv_path)
 
