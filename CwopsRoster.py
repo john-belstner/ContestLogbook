@@ -38,9 +38,9 @@ class CwopsRoster:
                 for row in reader:
                     if len(row) >= 4:
                         # CSV columns: (empty), Callsign, Number, Name, ...
-                        callsign = row[1].strip().upper()
-                        number = row[2].strip()
-                        name = row[3].strip()
+                        callsign = row[2].strip().upper()
+                        number = row[3].strip()
+                        name = row[4].strip()
 
                         if callsign and number and name:
                             self._roster[callsign] = (name, number)
